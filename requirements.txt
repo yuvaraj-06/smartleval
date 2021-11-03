@@ -8,3 +8,7 @@ pandas
 matplotlib
 symspellpy
 spacy
+fastapi
+pydantic
+uvicorn
+requests
