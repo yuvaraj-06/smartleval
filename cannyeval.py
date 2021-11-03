@@ -30,6 +30,7 @@ class CannyEval():
     self.csv_obj = {'teacher_answers':None, 'student_answers' : None}
     self.report = None
     self.gdm = None
+    self.class_strength=0
     pass
 
   def abbreviate_in_sen(self, sen, abbr_vocab, show_abbreviated=True):
@@ -80,12 +81,12 @@ class CannyEval():
     for i in range(1, question_count+1):
       stu_answers[str(i)] = []
     
-    class_strength = 60
-    
+    self.class_strength = len(teacher_student_json['1'][1])
+     
     for k,v in teacher_student_json.items():
-      stu_answers[str(k)] = np.array(v[2]).reshape(-1)
+      stu_answers[str(k)] = np.array(v[1]).reshape(-1)
       
-      stu_answers[str(k)] = np.concatenate([stu_answers[str(k)], np.full((class_strength -stu_answers[str(k)].shape[0], ), np.nan)])
+      stu_answers[str(k)] = np.concatenate([stu_answers[str(k)], np.full((self.class_strength -stu_answers[str(k)].shape[0], ), np.nan)])
       
     stu_answers = pd.DataFrame(stu_answers)
 
@@ -95,7 +96,7 @@ class CannyEval():
 
     jf = open(teacher_student_json_path)
     teacher_student_json = json.load(jf)
-    ground_truth_marks = pd.DataFrame({str(k):v[1] +[0 for i in range(60-len(v[1]))] for k,v in teacher_student_json.items() })
+    ground_truth_marks = pd.DataFrame({str(k):v[1] +[0 for i in range(self.class_strength-len(v[1]))] for k,v in teacher_student_json.items() })
     self.gdm = ground_truth_marks
     return ground_truth_marks
 
@@ -220,7 +221,7 @@ class CannyEval():
       self.csv_obj['teacher_answers'], self.csv_obj['student_answers'] = tea_answers, stu_answers
     
     
-    class_strength = len(stu_answers)
+    self.class_strength = len(stu_answers)
     student_marks = dict()
     for q in range(question_count):
       student_marks["Question " + str(q+1)] = []
@@ -235,7 +236,7 @@ class CannyEval():
     for col in range(1, question_count+1):
         teacher_answer = tea_answers[str(col)][0]
         encode_ta = True
-        for stu in range(class_strength):
+        for stu in range(self.class_strength):
           if stu_answers[str(col)][stu] != str(np.nan): #len(teacher_answer.split(" "))
             correctnesses, _, _ = self.evaluate(stu_answers[str(col)][stu], teacher_answer,encoders=encoders, abbr_vocab={}, gen_context_spread=125, spell_check='None', student_id = stu+1, question_id=col, encode_teacher_answer=encode_ta) #smaller context spread is more specific but less accurate at encoding
             to_append = correctnesses[-1]
@@ -253,7 +254,7 @@ class CannyEval():
           encode_ta = False
     
     report = student_marks
-    report_norm = np.empty((question_count, class_strength)) #it's row = class_strength*questions = len
+    report_norm = np.empty((question_count, self.class_strength)) #it's row = self.class_strength*questions = len
     for r in range(1, question_count+1):
         report_norm[r-1] = report["Question " + str(r)]
 
@@ -262,7 +263,7 @@ class CannyEval():
     for r in range(question_count):
       true_max =  max(report_norm_copy[r]) if relative_marking else 1
       true_min = 0 
-      for c in range(class_strength):
+      for c in range(self.class_strength):
         report_norm[r][c] = np.round((report_norm_copy[r][c]-true_min)/(true_max-true_min)*max_marks, decimals= 0 if integer_marking else 1) # mark = normalize(percentage), base_min_mark = 0, base_max_mark = true_max
 
     for q in range(question_count):
