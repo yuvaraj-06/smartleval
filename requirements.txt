@@ -7,3 +7,7 @@ tqdm
 pandas
 matplotlib
 symspell
+fastapi
+pydantic
+uvicorn
+requests

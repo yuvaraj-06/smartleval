@@ -70,7 +70,8 @@ class CannyEval():
     """converts json of format {question_id:[ teacher_answer, [student_scores], [[student_answers]]]} to csvs"""
 
     #jf = open(teacher_student_json_path)
-    teacher_student_json = data_json #json.load(jf)
+   
+    teacher_student_json = json.loads(data_json)#data_json #json.load(jf)
     self.json_obj = teacher_student_json
     tea_answers = pd.DataFrame({str(k):[v[0]] for k,v in teacher_student_json.items() })
     question_count = len(tea_answers.columns)
@@ -80,6 +81,7 @@ class CannyEval():
       stu_answers[str(i)] = []
     
     class_strength = 60
+    
     for k,v in teacher_student_json.items():
       stu_answers[str(k)] = np.array(v[2]).reshape(-1)
       
