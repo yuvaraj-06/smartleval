@@ -6,4 +6,5 @@ symspellpy
 tqdm
 pandas
 matplotlib
-symspell
+symspellpy
+spacy
